@@ -1,8 +1,7 @@
 <template>
-  <!-- <router-link to="/about">About</router-link> -->
   <main>
     <!-- <img class="blob" src="@/assets/blob.svg" alt="blob" /> -->
-    <svg viewBox="0 0 200 200">
+    <svg viewBox="0 0 200 200" class="blob">
       <defs>
         <!-- Our gradient fill #gradient -->
         <linearGradient id="gradient" gradientTransform="rotate(90)">
@@ -19,11 +18,6 @@
     </svg>
     <section>
       <div class="hello-card">
-        <!-- <p>Hi, I’m <span style="color:#34a9fe">Miguel.</span></p> -->
-        <!-- <p>
-          I’m a passionate web developer and I think I enjoy
-          <span style="color:#1fba73">micro-interactions</span> a little too much.
-        </p> -->
         <p class="firstTxt"></p>
         <p class="secondTxt"></p>
       </div>
@@ -39,22 +33,7 @@
       </div>
     </section>
     <div class="screen">
-      <div class="line">
-        <div class="chunk1"></div>
-      </div>
-      <div class="line">
-        <div class="chunk2"></div>
-        <div class="chunk3"></div>
-      </div>
-      <div class="line">
-        <div class="chunk4"></div>
-        <div class="chunk5"></div>
-      </div>
-      <div class="line">
-        <div class="chunk6"></div>
-        <div class="chunk7"></div>
-        <div class="chunk8"></div>
-      </div>
+      <ComputerSvg />
     </div>
   </main>
 </template>
@@ -64,9 +43,13 @@ import { spline } from "@georgedoescode/spline";
 import SimplexNoise from "simplex-noise";
 import TypeIt from "typeit";
 import gsap from "gsap";
+import ComputerSvg from "../../components/ComputerSvg.vue";
 
 export default {
   name: "Home",
+  components: {
+    ComputerSvg,
+  },
   data() {
     return {};
   },
@@ -115,33 +98,28 @@ export default {
           waitUntilVisible: true,
           afterComplete: function () {
             let tl = gsap.timeline();
-            tl.to(".screen", {
-              y:-40,
-              opacity: 1,
-              stagger: 0.2,
-              duration: 0.5,
-              ease: "in",
-            }).from(".line", {
-              width: 0,
-              opacity: 0,
-              stagger: 0.2,
-              duration: 1,
-              ease: "in",
-            }).to("svg", {
+            tl.to(".blob", {
               width: "120vmin",
               opacity: 1,
               duration: 2,
               ease: "out",
-            }).to(".btn-area", {
-              opacity: 1,
-              duration: 1,
-              stagger: 0.2,
-              ease: "back",
-            });
+            })
+              .to(".sidebar", {
+                left: "2em",
+                opacity: 1,
+                duration: 0.5,
+                ease: "out",
+              })
+              .to(".btn-area", {
+                opacity: 1,
+                duration: 1,
+                stagger: 0.2,
+                ease: "back",
+              });
           },
         })
           .type(
-            'I’m a passionate web developer and I think I enjoy <span style="color:#1fba73">micro-interactions</span> a little too much.'
+            'I’m a passionate web developer and I think I enjoy <span style="color:#1fba73">animations</span> a little too much.'
           )
           .pause(1000)
           .go();
@@ -210,12 +188,13 @@ main {
   position: relative;
   display: grid;
   width: 100%;
-  height: 100%;
-  grid-template-columns: 3fr 2fr;
+  height: 100vh;
+  grid-template-columns: 2.3fr minmax(0, 2fr);
   justify-items: center;
   align-items: center;
+  scroll-snap-align: start;
 
-  svg {
+  .blob {
     position: absolute;
     /* a perfectly square <svg> element that will never overflow the viewport */
     width: 0;
@@ -223,13 +202,6 @@ main {
     z-index: 0;
     right: 5%;
     opacity: 0;
-  }
-
-  .blob {
-    position: absolute;
-    z-index: 0;
-    right: 10%;
-    max-height: 90%;
   }
 
   section {
@@ -245,7 +217,7 @@ main {
   }
 
   .hello-card {
-    width: 75%;
+    width: 85%;
     height: 23.5rem;
     padding: 4rem 3rem;
     background: rgba(61, 64, 91, 0.53);
@@ -255,6 +227,7 @@ main {
     text-align: left;
     font-family: "Inter", sans-serif;
     font-weight: 300;
+    backdrop-filter: blur(4px);
 
     .firstTxt {
       font-size: 3rem;
@@ -268,7 +241,7 @@ main {
 
   .btn-area {
     opacity: 0;
-    width: 75%;
+    width: 85%;
     display: flex;
     gap: 4rem;
     button {
@@ -285,9 +258,14 @@ main {
       align-items: center;
       gap: 0.5em;
       cursor: pointer;
+      &:hover img {
+        transform: translateX(4px);
+      }
+
       img {
         margin-top: 4px;
         width: 0.7em;
+        transition: all 0.2s ease-out;
       }
     }
     .contact {
@@ -302,66 +280,13 @@ main {
   }
 
   .screen {
-    opacity: 0;
+    opacity: 1;
     position: relative;
     z-index: 1;
-    width: 75%;
-    background: blue;
-    border-radius: 1rem;
-    background: linear-gradient(135deg, #27293d 0%, #3d405b 100%);
-    box-shadow: -3px 3px 6px rgba(45, 48, 68, 0.2),
-      3px -3px 6px rgba(45, 48, 68, 0.2), -3px -3px 6px rgba(55, 58, 84, 0.9),
-      3px 3px 8px rgba(45, 48, 68, 0.9), inset 1px 1px 2px rgba(55, 58, 84, 0.3),
-      inset -1px -1px 2px rgba(45, 48, 68, 0.5);
-    padding: 3.5rem 3rem;
+    width: 100%;
     display: flex;
-    flex-direction: column;
-    gap: 2rem;
-
-    .line {
-      width: 100%;
-      display: flex;
-      justify-content: flex-start;
-      gap: 1rem;
-
-      div {
-        height: 2rem;
-        border-radius: 2rem;
-      }
-
-      .chunk1 {
-        background: #34a9fe;
-        width: 60%;
-      }
-      .chunk2 {
-        background: #f3af2e;
-        width: 60%;
-      }
-      .chunk3 {
-        background: #1fba73;
-        width: 30%;
-      }
-      .chunk4 {
-        background: #a29bfe;
-        width: 30%;
-      }
-      .chunk5 {
-        background: #1fba73;
-        width: 40%;
-      }
-      .chunk6 {
-        background: #34a9fe;
-        width: 40%;
-      }
-      .chunk7 {
-        background: #f3af2e;
-        width: 30%;
-      }
-      .chunk8 {
-        background: #a29bfe;
-        width: 30%;
-      }
-    }
+    justify-content: center;
+    align-items: center;
   }
 }
 </style>
