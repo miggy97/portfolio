@@ -4,8 +4,8 @@
     <section>
       <div
         class="square"
-        @click="selected('Home')"
-        :class="{ selected: isHome }"
+        @click="selected('Home', true)"
+        :class="{ selected: selection === 'Home' }"
       >
         <img src="@/assets/home.svg" alt="home icon" />
       </div>
@@ -13,8 +13,8 @@
     <section>
       <div
         class="square"
-        @click="selected('Skills')"
-        :class="{ selected: isSkills }"
+        @click="selected('Skills', true)"
+        :class="{ selected: selection === 'Skills' }"
       >
         <img src="@/assets/skills.svg" alt="skills icon" />
       </div>
@@ -22,8 +22,8 @@
     <section>
       <div
         class="square"
-        @click="selected('Portfolio')"
-        :class="{ selected: isPortfolio }"
+        @click="selected('Portfolio', true)"
+        :class="{ selected: selection === 'Portfolio' }"
       >
         <img src="@/assets/portfolio.svg" alt="portfolio icon" />
       </div>
@@ -31,8 +31,8 @@
     <section>
       <div
         class="square"
-        @click="selected('Work')"
-        :class="{ selected: isWork }"
+        @click="selected('Work', true)"
+        :class="{ selected: selection === 'Work' }"
       >
         <img src="@/assets/work.svg" alt="work icon" />
       </div>
@@ -40,8 +40,8 @@
     <section>
       <div
         class="square"
-        @click="selected('Person')"
-        :class="{ selected: isPerson }"
+        @click="selected('Person', true)"
+        :class="{ selected: selection === 'Person' }"
       >
         <img src="@/assets/person.svg" alt="person icon" />
       </div>
@@ -49,8 +49,8 @@
     <div class="contact-area">
       <div
         class="square"
-        @click="selected('Contact')"
-        :class="{ selectedContact: isContact }"
+        @click="selected('Contact', true)"
+        :class="{ selectedContact: selection === 'Contact' }"
       >
         <img src="@/assets/contact.svg" alt="contact icon" />
       </div>
@@ -62,22 +62,34 @@ export default {
   name: "Sidebar",
   data() {
     return {
-      isHome: true,
-      isSkills: false,
-      isPortfolio: false,
-      isWork: false,
-      isPerson: false,
-      isContact: false,
+      // isHome: true,
+      // isSkills: false,
+      // isPortfolio: false,
+      // isWork: false,
+      // isPerson: false,
+      // isContact: false,
+      selection: "Work",
+      isAnimation: false,
+      timeoutHandler: null,
     };
   },
+  watch: {
+    "$store.getters.getSelectionSidebar"() {
+      if (this.isAnimation === false) {
+        this.selected(this.$store.getters.getSelectionSidebar, false);
+      }
+    },
+  },
   methods: {
-    selected(selectionName) {
-      this.isHome = false;
-      this.isSkills = false;
-      this.isPortfolio = false;
-      this.isWork = false;
-      this.isPerson = false;
-      this.isContact = false;
+    selected(selectionName, isCliked) {
+      this.isAnimation = true;
+      if (this.timeoutHandler) {
+        clearTimeout(this.timeoutHandler);
+      }
+      this.timeoutHandler = setTimeout(() => {
+        this.isAnimation = false;
+      }, 500);
+      this.selection = selectionName;
       // home: 2.25em
       // skills: 7.75
       // portfolio: 13.25
@@ -85,28 +97,47 @@ export default {
       // person: 24.25
       switch (selectionName) {
         case "Home":
-          this.isHome = true;
           this.$refs.square.style = "top:2.25em";
+          if (isCliked) {
+            document
+              .querySelector(".home-view")
+              .scrollIntoView({ behavior: "smooth" });
+          }
           break;
         case "Skills":
-          this.isSkills = true;
           this.$refs.square.style = "top:7.75em";
+          if (isCliked) {
+            document
+              .querySelector(".skills-view")
+              .scrollIntoView({ behavior: "smooth" });
+          }
           break;
         case "Portfolio":
-          this.isPortfolio = true;
           this.$refs.square.style = "top:13.25em";
+          if (isCliked) {
+            document
+              .querySelector(".portfolio-view")
+              .scrollIntoView({ behavior: "smooth" });
+          }
           break;
         case "Work":
-          this.isWork = true;
           this.$refs.square.style = "top:18.75em";
+          if (isCliked) {
+            document
+              .querySelector(".work-view")
+              .scrollIntoView({ behavior: "smooth" });
+          }
           break;
         case "Person":
-          this.isPerson = true;
           this.$refs.square.style = "top:24.25em";
+          if (isCliked) {
+            document
+              .querySelector(".person-view")
+              .scrollIntoView({ behavior: "smooth" });
+          }
           break;
 
         default:
-          this.isContact = true;
           this.$refs.square.style = "top:40em";
           document.querySelector(".square-selection").style.opacity = 0;
           break;

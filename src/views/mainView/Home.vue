@@ -51,7 +51,24 @@ export default {
     ComputerSvg,
   },
   data() {
-    return {};
+    return {
+      path: null,
+      root: null,
+      points: null,
+      simplex: null,
+      noiseStep: 0.0005,
+      hueNoiseOffset: 0,
+      myReq: null,
+    };
+  },
+  watch: {
+    "$store.getters.getIsBlob"(value) {
+      if (!value) {
+        window.cancelAnimationFrame(this.myReq);
+      } else {
+        this.myReq = requestAnimationFrame(this.animate);
+      }
+    },
   },
   methods: {
     createPoints() {
@@ -86,36 +103,97 @@ export default {
 
       return points;
     },
+    map(n, start1, end1, start2, end2) {
+      return ((n - start1) / (end1 - start1)) * (end2 - start2) + start2;
+    },
+    noise(x, y) {
+      // return a value at {x point in time} {y point in time}
+      return this.simplex.noise2D(x, y);
+    },
+    animate() {
+      // generate a smooth continuous curve based on points, using Bezier curves. spline() will return an SVG path-data string. The arguments are (points, tension, close). Play with tension and check out the effect!
+      this.path.setAttribute("d", spline(this.points, 1, true));
+      this.myReq = requestAnimationFrame(this.animate);
+      // for every point...
+      for (let i = 0; i < this.points.length; i++) {
+        const point = this.points[i];
+
+        // return a pseudo random value between -1 / 1 based on this point's current x, y positions in "time"
+        const nX = this.noise(point.noiseOffsetX, point.noiseOffsetX);
+        const nY = this.noise(point.noiseOffsetY, point.noiseOffsetY);
+        // map this noise value to a new value, somewhere between it's original location -20 and it's original location + 20
+        const x = this.map(nX, -1, 1, point.originX - 20, point.originX + 20);
+        const y = this.map(nY, -1, 1, point.originY - 20, point.originY + 20);
+
+        // update the point's current coordinates
+        point.x = x;
+        point.y = y;
+
+        // progress the point's x, y values through "time"
+        point.noiseOffsetX += this.noiseStep;
+        point.noiseOffsetY += this.noiseStep;
+      }
+      this.hueNoiseOffset += this.noiseStep / 6;
+      const hueNoise = this.noise(this.hueNoiseOffset, this.hueNoiseOffset);
+      const hue = this.map(hueNoise, -1, 1, 0, 360);
+
+      this.root.style.setProperty("--startColor", `hsl(${hue}, 100%, 75%)`);
+      this.root.style.setProperty("--stopColor", `hsl(${hue + 60}, 100%, 75%)`);
+      document.body.style.background = `hsl(${hue + 60}, 75%, 5%)`;
+    },
   },
   mounted() {
+    // DELETE ON PRODUCTION
+    let tl = gsap.timeline();
+    tl.to(".blob", {
+      width: "120vmin",
+      opacity: 1,
+      duration: 0,
+      ease: "out",
+    })
+      .to(".sidebar", {
+        left: "2em",
+        opacity: 1,
+        duration: 0,
+        ease: "out",
+      })
+      .to(".btn-area", {
+        opacity: 1,
+        duration: 0,
+        stagger: 0.2,
+        ease: "back",
+      });
+    // END DELETE ON PRODUCTION
+
     new TypeIt(".firstTxt", {
       speed: 90,
-      waitUntilVisible: true,
+      waitUntilVisible: false,
       afterComplete: function (instance) {
         instance.destroy();
         new TypeIt(".secondTxt", {
           speed: 100,
-          waitUntilVisible: true,
+          waitUntilVisible: false,
           afterComplete: function () {
-            let tl = gsap.timeline();
-            tl.to(".blob", {
-              width: "120vmin",
-              opacity: 1,
-              duration: 2,
-              ease: "out",
-            })
-              .to(".sidebar", {
-                left: "2em",
-                opacity: 1,
-                duration: 0.5,
-                ease: "out",
-              })
-              .to(".btn-area", {
-                opacity: 1,
-                duration: 1,
-                stagger: 0.2,
-                ease: "back",
-              });
+            // FOR PRODUCTION //
+            // let tl = gsap.timeline();
+            // tl.to(".blob", {
+            //   width: "120vmin",
+            //   opacity: 1,
+            //   duration: 2,
+            //   ease: "out",
+            // })
+            //   .to(".sidebar", {
+            //     left: "2em",
+            //     opacity: 1,
+            //     duration: 0.5,
+            //     ease: "out",
+            //   })
+            //   .to(".btn-area", {
+            //     opacity: 1,
+            //     duration: 1,
+            //     stagger: 0.2,
+            //     ease: "back",
+            //   });
           },
         })
           .type(
@@ -130,55 +208,14 @@ export default {
       .go();
 
     // our <path> element
-    const path = document.querySelector("path");
+    this.path = document.querySelector("path");
     // used to set our custom property values
-    const root = document.documentElement;
-    const points = this.createPoints();
+    this.root = document.documentElement;
+    this.points = this.createPoints();
 
-    const simplex = new SimplexNoise();
-    // how fast we progress through "time"
-    let noiseStep = 0.0005;
-    let hueNoiseOffset = 0;
+    this.simplex = new SimplexNoise();
 
-    function map(n, start1, end1, start2, end2) {
-      return ((n - start1) / (end1 - start1)) * (end2 - start2) + start2;
-    }
-    function noise(x, y) {
-      // return a value at {x point in time} {y point in time}
-      return simplex.noise2D(x, y);
-    }
-
-    (function animate() {
-      // generate a smooth continuous curve based on points, using Bezier curves. spline() will return an SVG path-data string. The arguments are (points, tension, close). Play with tension and check out the effect!
-      path.setAttribute("d", spline(points, 1, true));
-      requestAnimationFrame(animate);
-      // for every point...
-      for (let i = 0; i < points.length; i++) {
-        const point = points[i];
-
-        // return a pseudo random value between -1 / 1 based on this point's current x, y positions in "time"
-        const nX = noise(point.noiseOffsetX, point.noiseOffsetX);
-        const nY = noise(point.noiseOffsetY, point.noiseOffsetY);
-        // map this noise value to a new value, somewhere between it's original location -20 and it's original location + 20
-        const x = map(nX, -1, 1, point.originX - 20, point.originX + 20);
-        const y = map(nY, -1, 1, point.originY - 20, point.originY + 20);
-
-        // update the point's current coordinates
-        point.x = x;
-        point.y = y;
-
-        // progress the point's x, y values through "time"
-        point.noiseOffsetX += noiseStep;
-        point.noiseOffsetY += noiseStep;
-      }
-      hueNoiseOffset += noiseStep / 6;
-      const hueNoise = noise(hueNoiseOffset, hueNoiseOffset);
-      const hue = map(hueNoise, -1, 1, 0, 360);
-
-      root.style.setProperty("--startColor", `hsl(${hue}, 100%, 75%)`);
-      root.style.setProperty("--stopColor", `hsl(${hue + 60}, 100%, 75%)`);
-      document.body.style.background = `hsl(${hue + 60}, 75%, 5%)`;
-    }.bind(this)());
+    this.myReq = requestAnimationFrame(this.animate);
   },
 };
 </script>
@@ -188,11 +225,12 @@ main {
   position: relative;
   display: grid;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
   grid-template-columns: 2.3fr minmax(0, 2fr);
   justify-items: center;
   align-items: center;
   scroll-snap-align: start;
+  flex: 0 0 100%;
 
   .blob {
     position: absolute;

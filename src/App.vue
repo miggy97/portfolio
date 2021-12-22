@@ -1,5 +1,5 @@
 <template>
-  <Sidebar />
+  <Sidebar ref="sidebar" />
   <router-view />
 </template>
 
@@ -15,6 +15,7 @@ export default {
 
 <style lang="scss">
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Yomogi&display=swap");
 
 *,
 *::before,
@@ -24,7 +25,8 @@ export default {
   box-sizing: border-box;
 }
 
-html,body {
+html,
+body {
   overflow-x: hidden;
 }
 
